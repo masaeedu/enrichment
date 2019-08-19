@@ -21,14 +21,6 @@ import Data.Kind
 
 type Hom k l = k -> k -> l
 
-data Iso (p :: Hom pi po) (a :: pi) (b :: pi)
- where
- Iso ::
-   { fwd :: p a b
-   , bwd :: p b a
-   } ->
-   Iso p a b
-
 data Category (m :: Hom mi pi) (p :: Hom pi po)
   where
   Category ::
@@ -56,6 +48,14 @@ data Functor (m :: Hom mi pi) (p :: Hom pi po) (q :: Hom qi qo) (f :: pi -> qi)
     , map :: forall a b. p a b `m` q (f a) (f b)
     } ->
     Functor m p q f
+
+data Iso (p :: Hom pi po) (a :: pi) (b :: pi)
+ where
+ Iso ::
+   { fwd :: p a b
+   , bwd :: p b a
+   } ->
+   Iso p a b
 
 data Monoid (m :: Hom mi mo) (i :: mi) (t :: mi -> mi -> mi) (o :: mi)
   where
