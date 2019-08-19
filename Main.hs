@@ -6,10 +6,13 @@
   , GADTs
   , RankNTypes
   , TypeOperators
-  , NoImplicitPrelude
   , TypeFamilies
+  , DuplicateRecordFields
 #-}
+
 module Main where
+
+import Prelude hiding (Functor, map)
 
 import Data.Proxy
 import Data.Kind
@@ -24,31 +27,40 @@ data Iso (p :: Hom pi po) (a :: pi) (b :: pi)
    } ->
    Iso p a b
 
+data Functor (m :: Hom mi pi) (p :: Hom pi po) (q :: Hom qi qo) (f :: pi -> qi)
+  where
+  Functor ::
+    { source :: Category p m
+    , target :: Category q m
+    , map :: forall a b. p a b `m` q (f a) (f b)
+    } ->
+    Functor m p q f
+
 data Monoidal (m :: Hom mi mo) (i :: mi) (t :: mi -> mi -> mi)
   where
   Monoidal ::
-    { category :: Category m
-    , assoc :: Iso m ((a `t` b) `t` c) (a `t` (b `t` c))
-    , lunit :: Iso m (i `t` l) l
-    , runit :: Iso m (r `t` i) r
+    { category :: Category m n
+    , assoc :: forall a b c. Iso m ((a `t` b) `t` c) (a `t` (b `t` c))
+    , lunit :: forall l. Iso m (i `t` l) l
+    , runit :: forall r. Iso m (r `t` i) r
     } ->
     Monoidal m i t
 
-data Category (p :: Hom pi po)
+data Category (m :: Hom mi pi) (p :: Hom pi po)
   where
   Category ::
-    { enrichment :: Monoidal m i t
-    , identity :: i `m` p a a
-    , compose :: (p y x `t` p x y) `m` p x z
+    { basis :: Monoidal m i t
+    , identity :: forall a. i `m` p a a
+    , compose :: forall x y z. (p y z `t` p x y) `m` p x z
     } ->
-    Category p
+    Category m p
 
-hask :: Category (->)
-hask = Category enrichment identity compose
+hask :: Category (->) (->)
+hask = Category basis identity compose
   where
   identity _ x = x
   compose (f, g) x = f (g x)
-  enrichment = Monoidal hask assoc lunit runit
+  basis = Monoidal hask assoc lunit runit
     where
     assoc = Iso fwd bwd
       where
@@ -62,3 +74,12 @@ hask = Category enrichment identity compose
       where
       fwd (l, _) = l
       bwd l = (l, ())
+
+list :: Functor (->) (->) (->) []
+list = Functor hask hask map
+  where
+  map f [] = []
+  map f (x : xs) = f x : map f xs
+
+test :: [Int]
+test = map list (* 2) [1, 2, 3]
