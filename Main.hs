@@ -9,11 +9,12 @@
   , TypeFamilies
   , DuplicateRecordFields
   , NamedFieldPuns
+  , NoImplicitPrelude
 #-}
 
 module Main where
 
-import Prelude hiding (Functor, map)
+import Prelude (Int, Maybe, Num(..))
 
 import Data.Proxy
 import Data.Kind
@@ -47,6 +48,15 @@ data Monoidal (m :: Hom mi mo) (i :: mi) (t :: mi -> mi -> mi)
     } ->
     Monoidal m i t
 
+data Monoid (p :: Hom pi po) (i :: pi) (t :: pi -> pi -> pi) (o :: pi)
+  where
+  Monoid ::
+    { basis :: Monoidal p i t
+    , unit :: i `p` o
+    , append :: (o `p` o) -> o
+    } ->
+    Monoid p i t o
+
 data Category (m :: Hom mi pi) (p :: Hom pi po)
   where
   Category ::
@@ -56,7 +66,11 @@ data Category (m :: Hom mi pi) (p :: Hom pi po)
     } ->
     Category m p
 
-hask :: Category (->) (->)
+type SmallCategory = Category (->)
+type SmallFunctor = Functor (->)
+type SmallEndoFunctor p f = SmallFunctor p p f
+
+hask :: SmallCategory (->)
 hask = Category { basis, identity, compose }
   where
   identity _ x = x
@@ -76,7 +90,7 @@ hask = Category { basis, identity, compose }
       fwd (l, _) = l
       bwd l = (l, ())
 
-list :: Functor (->) (->) (->) []
+list :: SmallEndoFunctor (->) []
 list = Functor { source = hask, target = hask, map }
   where
   map f [] = []
