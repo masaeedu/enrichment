@@ -21,6 +21,8 @@ import Data.Kind
 
 type Hom k l = k -> k -> l
 
+-- TODO: Figure out how to represent product categories
+
 data Category (m :: Hom mi pi) (p :: Hom pi po)
   where
   Category ::
