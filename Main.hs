@@ -32,8 +32,8 @@ data Iso (p :: Hom pi po) (a :: pi) (b :: pi)
 data Functor (m :: Hom mi pi) (p :: Hom pi po) (q :: Hom qi qo) (f :: pi -> qi)
   where
   Functor ::
-    { source :: Category p m
-    , target :: Category q m
+    { source :: Category m p
+    , target :: Category m q
     , map :: forall a b. p a b `m` q (f a) (f b)
     } ->
     Functor m p q f
@@ -41,7 +41,7 @@ data Functor (m :: Hom mi pi) (p :: Hom pi po) (q :: Hom qi qo) (f :: pi -> qi)
 data Monoidal (m :: Hom mi mo) (i :: mi) (t :: mi -> mi -> mi)
   where
   Monoidal ::
-    { basis :: Category m n
+    { basis :: Category n m
     , assoc :: forall a b c. Iso m ((a `t` b) `t` c) (a `t` (b `t` c))
     , lunit :: forall l. Iso m (i `t` l) l
     , runit :: forall r. Iso m (r `t` i) r
