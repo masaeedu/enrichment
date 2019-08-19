@@ -29,14 +29,14 @@ data Iso (p :: Hom pi po) (a :: pi) (b :: pi)
    } ->
    Iso p a b
 
-data Functor (m :: Hom mi pi) (p :: Hom pi po) (q :: Hom qi qo) (f :: pi -> qi)
+data Category (m :: Hom mi pi) (p :: Hom pi po)
   where
-  Functor ::
-    { source :: Category m p
-    , target :: Category m q
-    , map :: forall a b. p a b `m` q (f a) (f b)
+  Category ::
+    { basis :: Monoidal m i t
+    , identity :: forall a. i `m` p a a
+    , compose :: forall x y z. (p y z `t` p x y) `m` p x z
     } ->
-    Functor m p q f
+    Category m p
 
 data Monoidal (m :: Hom mi mo) (i :: mi) (t :: mi -> mi -> mi)
   where
@@ -48,6 +48,15 @@ data Monoidal (m :: Hom mi mo) (i :: mi) (t :: mi -> mi -> mi)
     } ->
     Monoidal m i t
 
+data Functor (m :: Hom mi pi) (p :: Hom pi po) (q :: Hom qi qo) (f :: pi -> qi)
+  where
+  Functor ::
+    { source :: Category m p
+    , target :: Category m q
+    , map :: forall a b. p a b `m` q (f a) (f b)
+    } ->
+    Functor m p q f
+
 data Monoid (p :: Hom pi po) (i :: pi) (t :: pi -> pi -> pi) (o :: pi)
   where
   Monoid ::
@@ -56,15 +65,6 @@ data Monoid (p :: Hom pi po) (i :: pi) (t :: pi -> pi -> pi) (o :: pi)
     , append :: (o `p` o) -> o
     } ->
     Monoid p i t o
-
-data Category (m :: Hom mi pi) (p :: Hom pi po)
-  where
-  Category ::
-    { basis :: Monoidal m i t
-    , identity :: forall a. i `m` p a a
-    , compose :: forall x y z. (p y z `t` p x y) `m` p x z
-    } ->
-    Category m p
 
 type SmallCategory = Category (->)
 type SmallFunctor = Functor (->)
